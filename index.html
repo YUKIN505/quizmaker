@@ -1111,7 +1111,7 @@ textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(-
   }
   async function shareLink(g) {
     const url = encodeShare(g);
-    try { await navigator.clipboard.writeText(url); toast('リンクをコピーしました。生徒に送ってください。'); }
+    try { await navigator.clipboard.writeText(url); toast('クイズをシェアするためのリンクをコピーしました。'); }
     catch (e) { window.prompt('このリンクをコピーして、生徒に送ってください：', url); }
   }
   function renderGames() {
