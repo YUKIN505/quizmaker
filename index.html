@@ -383,6 +383,7 @@ textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(-
       <button class="tool" id="toggleUsed" type="button" aria-pressed="false">すでに使用した漢字を 水色で 表示</button>
       <div id="kgrid"></div>
       <button class="make" id="make">クイズを始める</button>
+      <button class="sec-btn" id="exitMakeBtn" type="button">つくるのを やめる</button>
     </div>
   </section>
 
@@ -1114,7 +1115,7 @@ textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(-
     const el = $('#games');
     // only games that have been played (at least one question answered)
     const shown = games.filter(played);
-    if (!shown.length) { el.innerHTML = '<div class="empty">まだ プレイした ゲームが ありません。「つくる」で つくって あそんでね。</div>'; return; }
+    if (!shown.length) { el.innerHTML = '<div class="empty">まだクイズがありません。</div>'; return; }
     el.replaceChildren(...shown.slice().reverse().map(g => {
       const d = document.createElement('article'); d.className = 'game';
       const best = g.best == null ? '' : (g.best >= 85 ? `<span aria-label="さいこう">✔︎</span> ${g.best}％` : '') + `<span class="plays">${Math.max(playCount(g), 1)}回</span>`;
@@ -1182,6 +1183,7 @@ textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(-
   }
   $('#t-make').onclick = () => { stopTimer(); show('make'); };
   $('#t-list').onclick = () => { stopTimer(); show('list'); };
+  $('#exitMakeBtn').onclick = () => { stopTimer(); show('list'); };
   $('#t-prog').onclick = () => { stopTimer(); show('prog'); };
 
   // ───────── play ─────────
@@ -1433,7 +1435,7 @@ textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(-
       ${miss.length ? `<div class="review"><h3>${shown ? 'まちがえた もんだい' : 'もういちど 見てみよう'}</h3>${miss.map(x => `<div class="rv"><span class="w">${esc(x.q.word)}</span><span class="r">${esc(x.q.read)}</span><span class="y">${KIND_JP[x.q.kind]}<br>${x.given == null ? 'じかん ぎれ' : `<s>${esc(x.given)}</s>`}</span></div>`).join('')}</div>` : ''}
       <div class="res-btns">
         ${miss.length ? `<button class="next" id="r-miss">${shown ? 'まちがえた もんだいを もういちど' : 'もういちど チャレンジ'}</button>` : ''}
-        <button class="sec-btn" id="r-again">おなじ ゲームを もういちど</button>
+        <button class="sec-btn" id="r-again">おなじ クイズを もういちど</button>
         <button class="sec-btn" id="r-new">あたらしい もんだいで</button>
       </div></div>`;
     // red ink: a circle around the score, and a はなまる spiral for 100
