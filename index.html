@@ -1186,7 +1186,7 @@ textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(-
   }
   $('#t-make').onclick = () => { stopTimer(); show('make'); };
   $('#t-list').onclick = () => { stopTimer(); show('list'); };
-  $('#exitMakeBtn').onclick = () => { stopTimer(); show('list'); };
+  $('#exitMakeBtn').onclick = () => { stopTimer(); unlocked = false; try { sessionStorage.removeItem('kq-unlocked'); } catch (e) {} show('make'); };
   $('#t-prog').onclick = () => { stopTimer(); show('prog'); };
 
   // ───────── play ─────────
