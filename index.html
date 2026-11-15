@@ -138,6 +138,7 @@ nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--sheet)}
 .tool{border:1px solid var(--line);background:var(--chip);border-radius:8px;padding:5px 10px;font-size:13px}
 .tool[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--sheet)}
 textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(--line);border-radius:10px;background:var(--chip);color:var(--ink);padding:10px 12px;font-family:var(--font-k);font-size:20px;line-height:1.4}
+input#quizName{width:100%;border:1.5px solid var(--line);border-radius:10px;background:var(--chip);color:var(--ink);padding:10px 12px;font-family:var(--font-k);font-size:18px;box-sizing:border-box}
 .gl{font-size:12.5px;font-weight:700;color:var(--ink-soft);letter-spacing:.08em;display:flex;align-items:center;gap:8px}
 .gl::after{content:"";flex:1;height:1px;background:var(--line)}
 .ktray{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:5px}
@@ -385,6 +386,10 @@ textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(-
       <div class="lab">漢字表から選ぶ</div>
       <button class="tool" id="toggleUsed" type="button" aria-pressed="false">すでに使用した漢字を 水色で 表示</button>
       <div id="kgrid"></div>
+      <div class="field">
+        <div class="lab">クイズの 名前<small>（にゅうりょくしなくても れいの名前に なります）</small></div>
+        <input type="text" id="quizName" maxlength="40" placeholder="れい：れんしゅう１">
+      </div>
       <button class="make" id="make">クイズを始める</button>
       <button class="sec-btn" id="exitMakeBtn" type="button">つくるのを やめる</button>
     </div>
@@ -925,7 +930,8 @@ textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(-
       used.add(kind + ':' + w[0]); [...w[0]].forEach(c => kUse[c] = (kUse[c] || 0) + 1);   // the same question never twice
       q.g = w[2]; qs.push(q);
     }
-    // put the questions in a calm order: shuffle, but keep kinds alternating
+    // easier first: lower-grade kanji/questions before higher-grade ones, so a quiz warms up instead of jumping around
+    qs.sort((a, b) => (a.g || 0) - (b.g || 0));
     return qs;
   }
   function suits(kind, w, fs) {
@@ -1116,14 +1122,14 @@ textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(-
   }
   function renderGames() {
     const el = $('#games');
-    // only games that have been played (at least one question answered)
-    const shown = games.filter(played);
+    // every saved quiz shows up here, played or not — making one saves it right away
+    const shown = games;
     if (!shown.length) { el.innerHTML = '<div class="empty">まだクイズがありません。</div>'; return; }
     el.replaceChildren(...shown.slice().reverse().map(g => {
       const d = document.createElement('article'); d.className = 'game';
       const best = g.best == null ? '' : (g.best >= 85 ? `<span aria-label="さいこう">✔︎</span> ${g.best}％` : '') + `<span class="plays">${Math.max(playCount(g), 1)}回</span>`;
       d.innerHTML = `<h3></h3><div class="meta"><span>${g.count}もん</span>${g.typed ? '' : `<span>下の学年 ${g.mix === 0 ? 'なし' : g.mix < .3 ? 'すこし' : 'おおめ'}</span>`}${g.time ? `<span>${g.time}びょう</span>` : ''}</div>
-        <div class="ks"></div>${histHTML(g)}<div class="row"><span class="best">${best}</span><span style="display:flex;gap:6px"><button class="del-btn">けす</button><button class="share-btn">リンクを作る</button><button class="play-btn">PLAY AGAIN</button></span></div>`;
+        <div class="ks"></div>${histHTML(g)}<div class="row"><span class="best">${best}</span><span style="display:flex;gap:6px"><button class="del-btn">けす</button><button class="share-btn">リンクを作る</button><button class="play-btn">${played(g) ? 'PLAY AGAIN' : 'あそぶ'}</button></span></div>`;
       d.querySelector('h3').textContent = g.name;
       if (g.best != null && g.best >= 100) {   // 合格 only
         d.classList.add('stamped');
@@ -1160,9 +1166,10 @@ textarea#kin{width:100%;min-height:52px;resize:vertical;border:1.5px solid var(-
     const fs = focusSet();
     const g = { id: Date.now().toString(36), seed: (Math.random() * 2 ** 31) | 0, kinds: gameKinds(), mix: cfg.mix, count: cfg.count, time: cfg.time,
       typed: fs.typed, focus: [...fs.set], yomiFocus: cfg.yomiFocus, best: null };
-    g.name = gameName(g);
-    games = games.filter(played);   // a game made but never played isn't kept
+    const customName = $('#quizName').value.trim();
+    g.name = customName || gameName(g);
     games.push(g); if (games.length > 40) games.shift(); saveGames();
+    $('#quizName').value = '';
     startGame(g);
   };
 
